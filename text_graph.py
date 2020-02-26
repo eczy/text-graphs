@@ -1,10 +1,12 @@
 import argparse
 import spacy
 import os
-import networkx as nx
 import matplotlib.pyplot as plt
 
 nlp = spacy.load('en_core_web_sm')
+
+def is_noun(token):
+    return token.pos_ in ['NOUN', 'PROPN']
 
 def get_verb_edges(doc):
     edges = []
@@ -12,9 +14,9 @@ def get_verb_edges(doc):
         subj = None
         dobj = None
         for child in token.children:
-            if child.dep_ == 'nsubj' and child.pos_ == 'NOUN':
+            if child.dep_ == 'nsubj' and is_noun(child):
                 subj = child
-            elif child.dep_ == 'dobj' and child.pos_ == 'NOUN':
+            elif child.dep_ == 'dobj' and is_noun(child):
                 dobj = child
         if subj and dobj:
             edges.append([subj.text, dobj.text, token.text])
@@ -24,13 +26,13 @@ def get_adjective_edges(doc):
     edges = []
     for chunk in nlp(doc).noun_chunks:
         for token in chunk:
-            if token.pos_ != 'NOUN':
+            if not is_noun(token):
                 continue
             no_children = True
             for child in token.children:
-                if child.dep_ in ['amod', 'acl']:
+                if child.dep_ in ['amod', 'acl', 'compound']:
                     no_children = False
-                    edges.append([token.text, child.text, f'_{child.dep_}'])
+                    edges.append([child.text, token.text, f'_{child.dep_}'])
             edges.append([token.text, token.text, f'_idx'])
     return edges
 

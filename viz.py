@@ -16,10 +16,15 @@ def main():
             src, dst, edge = line.strip().split(',')
             if G.has_edge(src, dst):
                 G[src][dst]['weight'] += 1
+                continue
             G.add_edge(src, dst, type=edge, weight=1)
 
     plt.subplots(figsize=(10, 10))
-    nx.draw(G, with_labels=True, font_weight='bold')
+    edge_labels = nx.get_edge_attributes(G, 'type')
+    edge_labels = {k: v for k, v in edge_labels.items() if v != '_idx'}
+    pos = nx.circular_layout(G)
+    nx.draw(G, pos, with_labels=True, font_weight='bold')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels)
     plt.savefig(args.output_path)
 
 if __name__ == '__main__':
